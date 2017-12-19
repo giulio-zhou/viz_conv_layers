@@ -1,7 +1,7 @@
 from skimage.transform import resize
 from util import apply_forward_convs, apply_reverse_convs
 from util import mobilenet_layers
-from util import plot_conv_maps
+from util import plot_conv_maps, plot_conv_maps_ratio
 import numpy as np
 import skimage.io as skio
 import skvideo.io
@@ -34,22 +34,38 @@ if __name__ == '__main__':
     input_img[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w] = 1
     input_img = input_img.reshape(1, img_height, img_width, 1)
     input_layer = ('input', 1, 1, 1)
+    # Run the same convolutions on the complement to compute ratios.
+    input_img_noncropped = 1 - input_img
+    input_img_noncropped = \
+        input_img_noncropped.reshape(1, img_height, img_width, 1)
 
     sess = tf.Session()
     if mode == 'forward':
         conv_layers = apply_forward_convs(input_placeholder, layers)
         conv_outputs = sess.run(conv_layers,
                                 feed_dict={input_placeholder: input_img})
+        conv_outputs_noncropped = sess.run(
+            conv_layers, feed_dict={input_placeholder: input_img_noncropped})
         full_img = resize(full_img, (img_height, img_width))
         plot_conv_maps(full_img, [input_img] + conv_outputs,
                        [input_layer] + layers, show_image=show_image)
+        plot_conv_maps_ratio(
+            full_img, [input_img] + conv_outputs,
+            [input_img_noncropped] + conv_outputs_noncropped,
+            [input_layer] + layers, show_image=show_image)
     elif mode == 'backward':
         conv_layers = apply_reverse_convs(input_placeholder, layers)
         conv_outputs = sess.run(conv_layers,
                                 feed_dict={input_placeholder: input_img})
+        conv_outputs_noncropped = sess.run(
+            conv_layers, feed_dict={input_placeholder: input_img_noncropped})
         full_img = resize(full_img, (conv_outputs[0].shape[1],
                                      conv_outputs[0].shape[2]))
         plot_conv_maps(full_img, conv_outputs + [input_img],
                        layers + [input_layer], show_image=show_image)
+        plot_conv_maps_ratio(
+            full_img, conv_outputs + [input_img],
+            conv_outputs_noncropped + [input_img_noncropped],
+            layers + [input_layer], show_image=show_image)
     else:
         raise Exception('No matching mode for mode %s' % mode)

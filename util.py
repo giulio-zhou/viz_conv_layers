@@ -1,3 +1,4 @@
+from matplotlib import cm, colors
 from skimage.transform import resize
 import matplotlib.pyplot as plt
 import numpy as np
@@ -69,6 +70,39 @@ def plot_conv_maps(input_img, conv_outputs, layers, show_image=True):
             weighted_img = input_img * img_weight 
             ax.imshow(weighted_img)
         else:
-            ax.imshow(conv_output)
+            im = ax.imshow(conv_output, vmin=0, vmax=1, interpolation='none')
         ax.set_title(name)
-    plt.savefig('out.png', bbox_inches='tight')
+    if not show_image:
+        cax = fig.add_axes([0.93, 0.2, 0.03, 0.6])
+        fig.colorbar(im, cax)
+    plt.savefig('conv_maps.png', bbox_inches='tight')
+
+def plot_conv_maps_ratio(input_img, conv_outputs_main, conv_outputs_other,
+                         layers, show_image=True):
+    img_height, img_width, img_channels = input_img.shape
+    grid_height = int(np.ceil(np.sqrt(len(conv_outputs_main))))
+    grid_width = (len(conv_outputs_main) // grid_height) + 1
+    fig, axes = plt.subplots(grid_height, grid_width,
+                             figsize=(6*grid_height, 6*grid_width))
+    axes = axes.flatten()
+    for i in range(len(layers)):
+        name, h, w, stride = layers[i]
+        conv_output_main = np.squeeze(conv_outputs_main[i])
+        conv_output_other = np.squeeze(conv_outputs_other[i])
+        conv_output_ratio = \
+            conv_output_main / (conv_output_main + conv_output_other)
+        ax = axes[i]
+        if show_image:
+            img_weight = resize(conv_output_ratio, (img_height, img_width))
+            img_weight = np.dstack([img_weight] * img_channels)
+            img_weight *= (1 / np.max(img_weight))
+            weighted_img = input_img * img_weight 
+            ax.imshow(weighted_img)
+        else:
+            im = ax.imshow(conv_output_ratio, vmin=0, vmax=1,
+                           interpolation='none')
+        ax.set_title(name)
+    if not show_image:
+        cax = fig.add_axes([0.93, 0.2, 0.03, 0.6])
+        fig.colorbar(im, cax)
+    plt.savefig('conv_maps_ratio.png', bbox_inches='tight')
