@@ -1,4 +1,4 @@
-The purpose of these visualization scripts is to show how different parts of an image input contribute to the convolutional feature maps at each layer.
+The purpose of these visualization scripts is to show how different parts of an image input contribute to the convolutional feature maps at each layer. For now, this is hardcoded to visualize [MobileNet-224](https://arxiv.org/pdf/1704.04861.pdf) but, in principle, any network that has convolutional feature maps could be visualized by declaring the layers in the same format as `mobilenet_layers`.
 
 Usage: `python viz.py [mode] [layer] [img_height] [img_width] [crop_x] [crop_y] [crop_w] [crop_y] [show_image] [video/img_path] [frame_no]`
 
@@ -19,3 +19,13 @@ yields the following two outputs (`conv_maps` followed by `conv_maps_ratio` in t
 ![](img/forward_conv_maps_ratio_ex.png)
 
 As you can see, they look roughly the same other than somewhat different behavior towards the edges. This is due to the following reason. Although the absolute number of subject pixels that contribute to the edges of the feature maps are lower than those in the center, the number of "outside" pixels that contribute is also substantially lower! The benefit of the fractional visualization (as I see it) is that it displays the "signal-to-noise ratio" in a very rough sense, while the normal visualization just tells how much signal is present at that point.
+
+So far, the `backward` visualization has not been quite as informative but is still useful for getting a rough idea of how different parts of the image contribute. Running the command 
+```
+python viz.py backward conv6/dw-sep 7 7 3 1 3 5 show ~/Downloads/train_cam_full.mp4 30000
+```
+yields the following `conv_maps` and `conv_maps_ratio` diagrams.
+![](img/backward_conv_maps_ex.png)
+![](img/backward_conv_maps_ratio_ex.png)
+
+This shows that choosing a crop of a later feature map generally has contribution from the "corresponding" part of the image, but incorporates a fair amount of external information as well. If one is aiming to use these features for their "spatial localization" properties, it's important to consider how to trade-off the degree of localization against the "semantic level" of the features as one proceeds through the network.
