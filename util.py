@@ -52,7 +52,8 @@ def apply_reverse_convs(feature_map, layers):
     tf_layer_ops = tf_layer_ops[1:][::-1]
     return tf_layer_ops
 
-def plot_conv_maps(input_img, conv_outputs, layers, show_image=True):
+def plot_conv_maps(input_img, conv_outputs, layers,
+                   show_image=True, save_image=True):
     img_height, img_width, img_channels = input_img.shape
     grid_height = int(np.ceil(np.sqrt(len(conv_outputs))))
     grid_width = (len(conv_outputs) // grid_height) + 1
@@ -75,10 +76,14 @@ def plot_conv_maps(input_img, conv_outputs, layers, show_image=True):
     if not show_image:
         cax = fig.add_axes([0.93, 0.2, 0.03, 0.6])
         fig.colorbar(im, cax)
-    plt.savefig('conv_maps.png', bbox_inches='tight')
+    # Either show plot or save image.
+    if save_image:
+        plt.savefig('conv_maps.png', bbox_inches='tight')
+    else:
+        plt.show()
 
 def plot_conv_maps_ratio(input_img, conv_outputs_main, conv_outputs_other,
-                         layers, show_image=True):
+                         layers, show_image=True, save_image=True):
     img_height, img_width, img_channels = input_img.shape
     grid_height = int(np.ceil(np.sqrt(len(conv_outputs_main))))
     grid_width = (len(conv_outputs_main) // grid_height) + 1
@@ -105,4 +110,8 @@ def plot_conv_maps_ratio(input_img, conv_outputs_main, conv_outputs_other,
     if not show_image:
         cax = fig.add_axes([0.93, 0.2, 0.03, 0.6])
         fig.colorbar(im, cax)
-    plt.savefig('conv_maps_ratio.png', bbox_inches='tight')
+    # Either show plot or save image.
+    if save_image:
+        plt.savefig('conv_maps_ratio.png', bbox_inches='tight')
+    else:
+        plt.show()
